@@ -1,0 +1,45 @@
+name: CI Процесс
+
+on:
+  push:
+    branches:
+      - develop
+      - release/*
+  pull_request:
+    branches:
+      - develop
+      - release/*
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 17 Тохируулах
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Maven Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Checkstyle, Тест, болон Coverage Шалгах
+        run: mvn clean verify
+
+      - name: JaCoCo Тайлан Үүсгэх
+        run: mvn jacoco:report
+
+      - name: JaCoCo Тайлан Хадгалах
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
